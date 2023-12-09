@@ -1,58 +1,96 @@
-axios.get("https://tarmeezacademy.com/api/v1/posts?limit=5").then((res) => {
-  const posts = res.data.data;
+setupUI();
 
-  document.getElementById("posts").innerHTML = "";
-  posts.map((post) => {
-    let content = `
-            <div class="card shadow mb-3">
-          <div class="card-header">
-            ${
-              typeof post.author.profile_image === "string" ?
-              `<img
-              src="${post.author.profile_image}"
-              alt="Profile picture"
-              width="40"
-              height ="40"
-              class="rounded-circle border border-3"
-            />` : ''
-            }
-            <b>@${post.author.username}</b>
-          </div>
-          <div class="card-body">
-            ${
-              typeof post.image === "string" ?
-              `<img
-              src="${post.image}"
-              alt="clinic"
-              width="100%"
-            />` : ''
-            }
-            <h6 class="text-secondary mt-1">${post.created_at}</h6>
-            <h5>${post.title || ""}</h5>
 
-            <p>
-              ${post.body}
-            </p>
+//----------------------- Handle Login & Register & Logout -----------------------
+function loginBtnClick() {
+  const username = document.getElementById("username-input").value;
+  const password = document.getElementById("password-input").value;
 
-            <hr />
-            <div>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                class="bi bi-pen"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708l-1.585-1.585z"
-                />
-              </svg>
-              <span> (${post.comments_count}) Comments </span>
-            </div>
-          </div>
-        </div>
-        `;
-    document.getElementById("posts").innerHTML += content;
-  });
-});
+  axios
+    .post(`${baseUrl}/login`, {
+      username: username,
+      password: password,
+    })
+    .then((res) => {
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+
+      bootstrap.Modal.getInstance(
+        document.getElementById("login-modal")
+      ).hide();
+      // Show Success Toast
+      showToast("Welcome! You have successfully logged in.");
+      setupUI();
+    })
+    .catch((err) => {
+      alert(err.response.data.message);
+    });
+}
+
+function registerBtnClick(){
+  const username = document.getElementById("reg-username-input").value;
+  const password = document.getElementById("reg-password-input").value;
+  const name = document.getElementById("reg-name-input").value;
+  const email = document.getElementById("reg-email-input").value;
+  axios.post(`${baseUrl}/register`,{
+    username,
+    password,
+    name,
+    email
+  })
+  .then((res)=>{
+    localStorage.setItem("token", res.data.token);
+    localStorage.setItem("user", JSON.stringify(res.data.user));
+
+    bootstrap.Modal.getInstance(
+      document.getElementById("register-modal")
+    ).hide();
+    // Show Success Toast
+    showToast("Congratulations! You have successfully registered.");
+    setupUI();
+  })
+  .catch((err)=>{
+    alert(err.response.data.message)
+  })
+}
+
+// Handle Logout
+function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  setupUI();
+}
+
+//----------------------- Handle UI States -----------------------
+// Check Auth
+function Auth() {
+  const token = localStorage.getItem("token");
+  if (token == null) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
+function setupUI() {
+  const loginBtn = document.getElementById("login-btn");
+  const registerBtn = document.getElementById("register-btn");
+  const logoutBtn = document.getElementById("logout-btn");
+  if (Auth()) {
+    loginBtn.style.display = "none";
+    registerBtn.style.display = "none";
+    logoutBtn.style.display = "inline";
+  } else {
+    logoutBtn.style.display = "none";
+    loginBtn.style.display = "inline";
+    registerBtn.style.display = "inline";
+  }
+}
+
+
+function showToast(message){
+  document.getElementById("toast-body").innerHTML = message;
+  const toastLiveExample = document.getElementById("liveToast");
+  const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastLiveExample);
+  toastBootstrap.show();
+}
