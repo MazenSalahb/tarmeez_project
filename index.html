@@ -147,6 +147,12 @@
       <!-- END POSTS -->
     </div>
 
+    <!--================= Add Post Button =================-->
+    <div class="bg-primary shadow" id="add-btn" data-bs-toggle="modal" data-bs-target="#create-post-modal">
+      +
+    </div>
+    <!--================= End Add Post Button =================-->
+
     <!--================= MODALS =================-->
     <!-- Login Modal -->
     <div
@@ -250,8 +256,12 @@
                 <input type="text" class="form-control" id="reg-name-input" />
               </div>
               <div class="mb-3">
-                <label for="reg-email-text" class="col-form-label">Email:</label>
+                <label for="reg-email-input" class="col-form-label">Email:</label>
                 <input type="email" class="form-control" id="reg-email-input" />
+              </div>
+              <div class="mb-3">
+                <label for="reg-image-input" class="col-form-label">Profile Pic:</label>
+                <input type="file" class="form-control" id="reg-image-input" />
               </div>
             </form>
           </div>
@@ -275,6 +285,71 @@
       </div>
     </div>
     <!-- End Register Modal -->
+
+    <!-- Create Post Modal -->
+    <div
+      class="modal fade"
+      id="create-post-modal"
+      tabindex="-1"
+      aria-labelledby="exampleModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Create a new post</h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="mb-3">
+                <label for="title-input" class="col-form-label"
+                  >Title:</label
+                >
+                <input type="text" class="form-control" id="title-input" />
+              </div>
+              <div class="mb-3">
+                <label for="body-input" class="col-form-label"
+                  >Body:</label
+                >
+                <textarea
+                  class="form-control"
+                  id="body-input"
+                ></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="image-input" class="col-form-label"
+                  >Image:</label
+                >
+                <input type="file" class="form-control" id="image-input" />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="createNewPost()"
+            >
+              Create
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End Create Post Modal -->
     <!--================= END MODALS =================-->
 
     <!-- ========== Login Success Toast ========== -->
@@ -306,7 +381,9 @@
       // ----------------------- API -----------------------
       const baseUrl = "https://tarmeezacademy.com/api/v1";
       // Show Posts
-      axios.get(`${baseUrl}/posts?limit=5`).then((res) => {
+      getPosts()
+      function getPosts() {
+        axios.get(`${baseUrl}/posts?limit=5`).then((res) => {
         const posts = res.data.data;
 
         document.getElementById("posts").innerHTML = "";
@@ -314,17 +391,14 @@
           let content = `
             <div class="card shadow mb-3">
           <div class="card-header">
-            ${
-              typeof post.author.profile_image === "string"
-                ? `<img
-              src="${post.author.profile_image}"
+             <img
+              src="${typeof post.author.profile_image === "string"? post.author.profile_image : "./assets/profile-pics/defpic.png"}"
               alt="Profile picture"
               width="40"
               height ="40"
               class="rounded-circle border border-3"
-            />`
-                : ""
-            }
+            />
+                
             <b>@${post.author.username}</b>
           </div>
           <div class="card-body">
@@ -366,6 +440,41 @@
           document.getElementById("posts").innerHTML += content;
         });
       });
+      }
+
+      function createNewPost(){
+        const title = document.getElementById("title-input").value;
+        const body = document.getElementById("body-input").value;
+        const image = document.getElementById("image-input").files[0];
+        const token = localStorage.getItem("token")
+        
+        let formData = new FormData();
+        formData.append("title",title)
+        formData.append("body",body)
+        formData.append("image",image)
+
+        const headers = {
+          "Content-Type":"multipart/form-data",
+          "authorization": `Bearer ${token}`
+        }
+        axios.post(`${baseUrl}/posts`,formData,{
+          headers
+        })
+        .then((res)=>{
+          bootstrap.Modal.getInstance(
+          document.getElementById("create-post-modal")
+        ).hide();
+          showToast("Poast Added Successfully")
+          getPosts()
+        }).catch((err)=>{alert(err.response.data.message)})
+      }
+
+      function showToast(message) {
+        document.getElementById("toast-body").innerHTML = message;
+        const toastLiveExample = document.getElementById("liveToast");
+        const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastLiveExample);
+        toastBootstrap.show();
+      }
     </script>
 
     <!-- Import JS -->
