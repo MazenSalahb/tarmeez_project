@@ -79,13 +79,25 @@ function setupUI() {
   const registerBtn = document.getElementById("register-btn");
   const logoutBtn = document.getElementById("logout-btn");
   const addPostBtn = document.getElementById("add-btn");
+  const usName = document.getElementById("usName");
+  const navProfilePic = document.getElementById("nav-profile-pic");
   if (Auth()) {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    usName.innerHTML = `@${userData.username}`;
+    navProfilePic.src =
+      typeof userData.profile_image == "string"
+        ? userData.profile_image
+        : "./assets/profile-pics/defpic.png";
+    usName.style.display = "inline";
     loginBtn.style.display = "none";
     registerBtn.style.display = "none";
     logoutBtn.style.display = "inline";
+    navProfilePic.style.display = "inline";
     addPostBtn.style.display = "flex";
   } else {
     logoutBtn.style.display = "none";
+    usName.style.display = "none";
+    navProfilePic.style.display = "none";
     loginBtn.style.display = "inline";
     registerBtn.style.display = "inline";
     addPostBtn.style.display = "none";
